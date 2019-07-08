@@ -40,16 +40,6 @@ public class MainActivity extends AppCompatActivity {
         mTaskListView = (ListView) findViewById(R.id.list_todo);
         mHelper = new TaskDbHelper(this);
         pHelper = new PointsDbHelper(this);
-        SQLiteDatabase db = mHelper.getReadableDatabase();
-        Cursor cursor = db.query(TaskContract.TaskEntry.TABLE,
-                new String[]{TaskContract.TaskEntry._ID, TaskContract.TaskEntry.COL_TASK_TITLE},
-                null, null, null, null, null);
-        while(cursor.moveToNext()) {
-            int idx = cursor.getColumnIndex(TaskContract.TaskEntry.COL_TASK_TITLE);
-            Log.d(TAG, "Task: " + cursor.getString(idx));
-        }
-        cursor.close();
-        db.close();
         updateUI();
     }
     @Override
@@ -64,35 +54,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_add_task:
                 Intent i =new Intent(MainActivity.this,addTasks.class);
                 startActivity(i);
-//                final EditText taskEditText = new EditText(this);
-//                AlertDialog dialog = new AlertDialog.Builder(this)
-//                        .setTitle("Add a new task")
-//                        .setMessage("What do you want to do next?")
-//                        .setView(taskEditText)
-//                        .setPositiveButton("Add", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                String task = String.valueOf(taskEditText.getText());
-//                                Log.d(TAG, "Task to add: " + task);
-//                                SQLiteDatabase db = mHelper.getWritableDatabase();
-//                                ContentValues values = new ContentValues();
-//                                values.put(TaskContract.TaskEntry.COL_TASK_TITLE, task);
-//
-//                                db.insertWithOnConflict(TaskContract.TaskEntry.TABLE,
-//                                        null,
-//                                        values,
-//                                        SQLiteDatabase.CONFLICT_REPLACE);
-//
-//                                db.close();
-//
-//
-//                                updateUI();
-//                                dialog.dismiss();
-//                                }
-//                        })
-//                        .setNegativeButton("Cancel", null)
-//                        .create();
-//                dialog.show();
                 return true;
 
             default:
@@ -171,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         TextView taskTextView = (TextView) parent.findViewById(R.id.task_title);
         String task = String.valueOf(taskTextView.getText());
         SQLiteDatabase db2 = mHelper.getReadableDatabase();
-        Cursor cursor1 = db.query(TaskContract.TaskEntry.TABLE,
+        Cursor cursor1 = db2.query(TaskContract.TaskEntry.TABLE,
                 new String[] {TaskContract.TaskEntry.COL_TASK_POINT},
                 TaskContract.TaskEntry.COL_TASK_TITLE+"= ?",
                 new String[] {task},
@@ -192,6 +153,15 @@ public class MainActivity extends AppCompatActivity {
         values.put(TaskContract.PointsEntry.COL_POINTS_TP, Integer.toString(totalPoints));
         db1.update(TaskContract.PointsEntry.TABLE1,values,TaskContract.PointsEntry._ID +  "= ?", new String[] {"1"});
         db1.close();
+
+
+
+
+        SQLiteDatabase db22 = mHelper.getWritableDatabase();
+        db22.delete(TaskContract.TaskEntry.TABLE,
+                TaskContract.TaskEntry.COL_TASK_TITLE + " = ?",
+                new String[]{task});
+        db22.close();
         updateUI();
     }
 
