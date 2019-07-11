@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -26,20 +27,20 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private TaskDbHelper mHelper;
-    private PointsDbHelper pHelper;
     private ListView mTaskListView;
     private TextView pointsDisplay;
     private ArrayAdapter<String> mAdapter;
+    private ListAdapter listAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         pointsDisplay = (TextView) findViewById(R.id.points);
         mTaskListView = (ListView) findViewById(R.id.list_todo);
         mHelper = new TaskDbHelper(this);
-        pHelper = new PointsDbHelper(this);
+        listAdapter =new ListAdapter(getApplicationContext(), R.layout.item_todo);
+        mTaskListView.setAdapter(listAdapter);
         updateUI();
     }
     @Override
@@ -61,28 +62,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void updateUI() {
-        ArrayList<String> taskList = new ArrayList<>();
         SQLiteDatabase db = mHelper.getReadableDatabase();
-        Cursor cursor = db.query(TaskContract.TaskEntry.TABLE,
-                new String[]{TaskContract.TaskEntry._ID, TaskContract.TaskEntry.COL_TASK_TITLE},
-                null, null, null, null, null);
-        while (cursor.moveToNext()) {
-            int idx = cursor.getColumnIndex(TaskContract.TaskEntry.COL_TASK_TITLE);
-            taskList.add(cursor.getString(idx));
+        Cursor cursor = db.rawQuery("Select * from "+ TaskContract.TaskEntry.TABLE,null);
+        if(cursor.moveToFirst()) {
+            do{
+                String title,desc,points;
+                title=cursor.getString(1);
+                desc = cursor.getString(2);
+                points =cursor.getString(3);
+                DataProvider dp = new DataProvider(title,desc,points);
+                listAdapter.add(dp);
+            }
+            while(cursor.moveToNext());
         }
-
-        if (mAdapter == null) {
-            mAdapter = new ArrayAdapter<>(this,
-                    R.layout.item_todo,
-                    R.id.task_title,
-                    taskList);
-            mTaskListView.setAdapter(mAdapter);
-        } else {
-            mAdapter.clear();
-            mAdapter.addAll(taskList);
-            mAdapter.notifyDataSetChanged();
-        }
-
         cursor.close();
         db.close();
 
@@ -107,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void doneTask(View view) {
-
+        View parent = (View) view.getParent();
         SQLiteDatabase db = mHelper.getReadableDatabase();
         Cursor cursor = db.query(TaskContract.PointsEntry.TABLE1,
                 new String[] {TaskContract.PointsEntry.COL_POINTS_TP},
@@ -128,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        View parent = (View) view.getParent();
+
         TextView taskTextView = (TextView) parent.findViewById(R.id.task_title);
         String task = String.valueOf(taskTextView.getText());
         SQLiteDatabase db2 = mHelper.getReadableDatabase();
@@ -153,10 +145,6 @@ public class MainActivity extends AppCompatActivity {
         values.put(TaskContract.PointsEntry.COL_POINTS_TP, Integer.toString(totalPoints));
         db1.update(TaskContract.PointsEntry.TABLE1,values,TaskContract.PointsEntry._ID +  "= ?", new String[] {"1"});
         db1.close();
-
-
-
-
         SQLiteDatabase db22 = mHelper.getWritableDatabase();
         db22.delete(TaskContract.TaskEntry.TABLE,
                 TaskContract.TaskEntry.COL_TASK_TITLE + " = ?",

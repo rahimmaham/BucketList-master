@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.example.asimz.bucketlist.db.TaskContract;
 import com.example.asimz.bucketlist.db.TaskDbHelper;
@@ -39,7 +40,11 @@ public class addTasks extends AppCompatActivity {
                 txt_title = titles.getText().toString();
                 txt_desc = desc.getText().toString();
                 txt_points = points.getText().toString();
-                addTask();
+                if (txt_title.isEmpty() || txt_desc.isEmpty() || txt_points.isEmpty()) {
+                    Toast.makeText(addTasks.this, "Please fill fields properly..", Toast.LENGTH_LONG).show();
+                } else {
+                    addTask();
+                }
             }
         });
 
@@ -55,6 +60,7 @@ public class addTasks extends AppCompatActivity {
         values.put(TaskContract.TaskEntry.COL_TASK_TITLE, txt_title);
         values.put(TaskContract.TaskEntry.COL_TASK_DESC, txt_desc);
         values.put(TaskContract.TaskEntry.COL_TASK_POINT, txt_points);
+
         db.insertWithOnConflict(TaskContract.TaskEntry.TABLE,
                 null,
                 values,
@@ -62,6 +68,7 @@ public class addTasks extends AppCompatActivity {
 
         db.close();
         Intent i =new Intent(addTasks.this,MainActivity.class);
+        finishAffinity();
         startActivity(i);
     }
 }
